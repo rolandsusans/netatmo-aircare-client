@@ -6,7 +6,7 @@ Measurement information:
  - Humidity
  - CO2
  - Noise
- - Pressure|
+ - Pressure
  - AbsolutePressure
  - LastMeasure UTC time of last measurement
  - HealthIdx
