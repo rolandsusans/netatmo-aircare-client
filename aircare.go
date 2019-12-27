@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"log"
 
 	"golang.org/x/oauth2"
 )
@@ -120,6 +121,8 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	token, err := oauth.PasswordCredentialsToken(oauth2.NoContext, config.Username, config.Password)
+
+    log.Printf("Token is %s...", token)
 
 	return &Client{
 		oauth:      oauth,
