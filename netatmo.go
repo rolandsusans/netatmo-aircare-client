@@ -1,4 +1,4 @@
-package aircare
+package netatmo
 
 import (
 	"encoding/json"
