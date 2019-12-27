@@ -78,8 +78,11 @@ type Device struct {
 // Humidity : Last humidity measured @ LastMeasure (in %)
 // CO2 : Last Co2 measured @ time_utc (in ppm)
 // Noise : Last noise measured @ LastMeasure (in db)
+// AbsolutePressure: AbsolutePressure
 // Pressure : Last Sea level pressure measured @ LastMeasure (in mb)
-// LastMeasure : Contains timestamp of last data received
+// LastMeasure : Contains timestamp when last measurment was done
+// HealthIdx: Index that characterises health status
+
 type DashboardData struct {
 	Temperature      *float32 `json:"Temperature,omitempty"` // use pointer to detect ommitted field by json mapping
 	Humidity         *int32   `json:"Humidity,omitempty"`
@@ -233,14 +236,13 @@ func (d *Device) Data() (int64, map[string]interface{}) {
 	}
 	if d.DashboardData.AbsolutePressure != nil {
 		m["AbsolutePressure"] = *d.DashboardData.AbsolutePressure
-        }
-        if d.DashboardData.LastMeasure != nil {
+    }
+	if d.DashboardData.LastMeasure != nil {
 		m["LastMeasure"] = *d.DashboardData.LastMeasure
-        }
-
-        if d.DashboardData.HealthIdx != nil {
+	}
+	if d.DashboardData.HealthIdx != nil {
 		m["HealthIdx"] = *d.DashboardData.HealthIdx
-        }
+	}
 
 	return *d.DashboardData.LastMeasure, m
 }
