@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"log"
-
 	"golang.org/x/oauth2"
 )
 
@@ -72,7 +70,6 @@ type Device struct {
 	RFStatus       *int32 `json:"rf_status,omitempty"`
 	Type           string
 	DashboardData  DashboardData `json:"dashboard_data"`
-	//DataType      []string      `json:"data_type"`
 	LinkedModules []*Device `json:"modules"`
 }
 
@@ -82,14 +79,6 @@ type Device struct {
 // CO2 : Last Co2 measured @ time_utc (in ppm)
 // Noise : Last noise measured @ LastMeasure (in db)
 // Pressure : Last Sea level pressure measured @ LastMeasure (in mb)
-// AbsolutePressure : Real measured pressure @ LastMeasure (in mb)
-// Rain : Last rain measured (in mm)
-// Rain1Hour : Amount of rain in last hour
-// Rain1Day : Amount of rain today
-// WindAngle : Current 5 min average wind direction @ LastMeasure (in °)
-// WindStrength : Current 5 min average wind speed @ LastMeasure (in km/h)
-// GustAngle : Direction of the last 5 min highest gust wind @ LastMeasure (in °)
-// GustStrength : Speed of the last 5 min highest gust wind @ LastMeasure (in km/h)
 // LastMeasure : Contains timestamp of last data received
 type DashboardData struct {
 	Temperature      *float32 `json:"Temperature,omitempty"` // use pointer to detect ommitted field by json mapping
@@ -98,14 +87,8 @@ type DashboardData struct {
 	Noise            *int32   `json:"Noise,omitempty"`
 	Pressure         *float32 `json:"Pressure,omitempty"`
 	AbsolutePressure *float32 `json:"AbsolutePressure,omitempty"`
-	Rain             *float32 `json:"Rain,omitempty"`
-	Rain1Hour        *float32 `json:"sum_rain_1,omitempty"`
-	Rain1Day         *float32 `json:"sum_rain_24,omitempty"`
-	WindAngle        *int32   `json:"WindAngle,omitempty"`
-	WindStrength     *int32   `json:"WindStrength,omitempty"`
-	GustAngle        *int32   `json:"GustAngle,omitempty"`
-	GustStrength     *int32   `json:"GustStrength,omitempty"`
 	LastMeasure      *int64   `json:"time_utc"`
+	HealthIdx        *int32   `json:"health_idx,omitempty"`
 }
 
 // NewClient create a handle authentication to Netamo API
@@ -113,7 +96,7 @@ func NewClient(config Config) (*Client, error) {
 	oauth := &oauth2.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
-		Scopes:       []string{"read_station"},
+		Scopes:       []string{"read_homecoach"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  baseURL,
 			TokenURL: authURL,
@@ -121,8 +104,6 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	token, err := oauth.PasswordCredentialsToken(oauth2.NoContext, config.Username, config.Password)
-
-    log.Printf("Token is %s...", token)
 
 	return &Client{
 		oauth:      oauth,
@@ -201,7 +182,7 @@ func processHTTPResponse(resp *http.Response, err error, holder interface{}) err
 
 // GetStations returns the list of stations owned by the user, and their modules
 func (c *Client) Read() (*DeviceCollection, error) {
-	resp, err := c.doHTTPGet(deviceURL, url.Values{"app_type": {"app_station"}})
+	resp, err := c.doHTTPGet(deviceURL, url.Values{})
 	//dc := &DeviceCollection{}
 
 	if err = processHTTPResponse(resp, err, c.Dc); err != nil {
@@ -252,31 +233,14 @@ func (d *Device) Data() (int64, map[string]interface{}) {
 	}
 	if d.DashboardData.AbsolutePressure != nil {
 		m["AbsolutePressure"] = *d.DashboardData.AbsolutePressure
-	}
-	if d.DashboardData.Rain != nil {
-		m["Rain"] = *d.DashboardData.Rain
-	}
-	if d.DashboardData.Rain1Hour != nil {
-		m["Rain1Hour"] = *d.DashboardData.Rain1Hour
-	}
-	if d.DashboardData.Rain1Day != nil {
-		m["Rain1Day"] = *d.DashboardData.Rain1Day
-	}
-	if d.DashboardData.WindAngle != nil {
-		m["WindAngle"] = *d.DashboardData.WindAngle
-	}
-	if d.DashboardData.WindStrength != nil {
-		m["WindStrength"] = *d.DashboardData.WindStrength
-	}
-	if d.DashboardData.GustAngle != nil {
-		m["GustAngle"] = *d.DashboardData.GustAngle
-	}
-	if d.DashboardData.GustAngle != nil {
-		m["GustAngle"] = *d.DashboardData.GustAngle
-	}
-	if d.DashboardData.GustStrength != nil {
-		m["GustStrength"] = *d.DashboardData.GustStrength
-	}
+        }
+        if d.DashboardData.LastMeasure != nil {
+		m["LastMeasure"] = *d.DashboardData.LastMeasure
+        }
+
+        if d.DashboardData.HealthIdx != nil {
+		m["HealthIdx"] = *d.DashboardData.HealthIdx
+        }
 
 	return *d.DashboardData.LastMeasure, m
 }
